@@ -307,9 +307,9 @@ print("Array 123:\n", array123)
 # uncompressed binary format with extension .npy
 
 array131 = np.arange(10)
-np.save('test_array', array131)
+np.save('datasets/test_array', array131)
 
-array132 = np.load('test_array.npy')
+array132 = np.load('datasets/test_array.npy')
 print("Array 132:\n", array132)
 
 # We can save and load them as txt files too with np.savetxt and np.loadtxt - delimiters can be specified in these
