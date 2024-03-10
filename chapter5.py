@@ -547,3 +547,17 @@ frame6_10 = frame6_10.set_index(['c', 'd'])
 printFrame(6,10)
 frame6_10 = frame6_10.reset_index()
 printFrame(6,10)
+
+# *************************************************************
+
+# Other Pandas topics
+
+# Integer Indexing:
+# If an index is composed of integers, then querying it for a number will default to labels. Use iloc to get positions
+
+# Panel Data:
+# A panel is effective a 3D DataFrame
+# Create one using the Panel function and pass is a dictionary of DataFrames
+# Can just use hierarchical indexing instead
+# to_frame and to_panel methods to stack and unstack
+# Things otherwise basically work as expected
