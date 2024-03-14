@@ -3,6 +3,7 @@
 from pandas import Series, DataFrame
 from pandas_datareader import data
 from bs4 import BeautifulSoup
+from lxml import etree
 
 import pandas as pd
 import numpy as np
@@ -10,8 +11,8 @@ import csv
 import json
 import urllib3
 import sqlite3
-import pymongo
 import requests
+import re
 
 # *************************************************************
 
@@ -238,6 +239,7 @@ response = http.request('GET', url)
 print(response.status)
 
 # BEAUTIFUL SOUP
+print("BEAUTIFUL SOUP READ-IN OF BBC NEWS:")
 if response.status == 200:
     soup = BeautifulSoup(response.data, 'html.parser')
 
@@ -247,12 +249,21 @@ if response.status == 200:
 response.release_conn()
 
 # XML
-# TODO: COME BACK AND FINISH XML
-# path = 'examples/books.xml'
-# tree = xml.etree.ElementTree.parse(path)
-# root=tree.getroot()
-# for child in root:
-#     print(child.text)
+print("LXML READ-IN OF BOOKS.XML")
+path = 'examples/books.xml'
+root = etree.parse(path).getroot()
+# We can print the lot with a .tostring()
+# print(etree.tostring(root))
+# Or let's try to parse it into a DataFrame:
+xmldata = []
+for child in root:
+  nodeDict = {}
+  for node in child:
+    nodeDict[node.tag] = node.text
+  xmldata.append(nodeDict)
+
+frame1_10 = DataFrame(xmldata)
+printFrame(1,10)
 
 # *************************************************************
 
@@ -289,19 +300,55 @@ printFrame(2,3)
 
 # Interacting with HTML and Web APIs
 
-# TODO: COME BACK AND FINISH
+# PULLING SNOOKER SCORES WITH BEAUTIFUL SOUP
 
-# url = 'http://bbc.co.uk/news/'
-# resp = requests.get(url)
+url = 'https://snookerscores.net/tournament-manager/2024-english-6-red-snooker-championship/results'
+response=requests.get(url)
+if response.status_code == 200:
+  soup = BeautifulSoup(response.content, 'html.parser')
 
-# data = resp.json()
+  rounds = soup.find_all(href=re.compile("https://snookerscores.net/scoreboard/match/.*"))
+  roundList = []
+  for round in rounds:
+      roundList.append(round.text.strip())
+      
+  players = soup.find_all(href=re.compile("https://snookerscores.net/player/.*"))
+  playerList = []
+  for player in players:
+      playerList.append(player.text.strip())
+
+  outcomes = soup.find_all("div", class_=re.compile("col-2 text-nowrap.*"))
+  scoreList = []
+  for outcome in outcomes:
+    outcome_str = outcome.get_text()
+    scoreList.append(outcome_str)
+
+  matchList = []
+
+  if len(playerList) == 2*len(scoreList):
+    for counter in range(len(scoreList)):
+       matchDict = {"round" : roundList[counter],
+                    "player1" : playerList[2*counter],
+                    "p1score" : scoreList[counter][0],
+                    "p2score" : scoreList[counter][2],
+                    "player2" : playerList[2*counter+1]}
+       matchList.append(matchDict)
+  
+  frame2_4 = DataFrame(matchList)
+  printFrame(2,4)
+
+#   Let's looks at the tournament progression of the winner:
+  frame2_5 = frame2_4[np.logical_or(frame2_4["player1"] == "Daniel Womersley", frame2_4["player2"] == "Daniel Womersley")]
+  print("Dan Womersley Tounrament Progress:")
+  print(frame2_5)
+  print()
 
 # *************************************************************
 
 # Interacting with Databases
 
 # SQLITE
-
+print("PLAYING WITH SQL:")
 query = """
 CREATE TABLE test
 (a VARCHAR(20), b VARCHAR(20),
